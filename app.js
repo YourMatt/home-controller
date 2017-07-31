@@ -5,6 +5,7 @@ require ("dotenv").config();
 // include libraries
 var express = require ("express")
 ,   ejs = require ("ejs")
+,   http = require ("http")
 ,   page = require ("./pagemanager.js")
 ,   database = require ("./databaseaccessor.js")
 ,   email = require ("./emailaccessor.js");
@@ -16,7 +17,38 @@ app.set ("views", __dirname + "/views/layout");
 app.engine ("ejs", ejs.renderFile);
 app.use (express.static (__dirname + "/public"));
 
-// evaluate the path to load content
+// set api endpoints
+app.get ("/sonos/play/clip/:mp3/:volume?", function (req, res) {
+
+    var sonosApiPath = "/" + process.env.SONOS_PLAYER_NAME + "/clip/" + req.params.mp3;
+    if (req.params.volume) sonosApiPath += "/" + req.params.volume;
+
+    http.get ({
+        host: process.env.SONOS_URI,
+        port: 80,
+        path: sonosApiPath
+    },
+    function (sonos_res) {
+        //console.log (sonos_res);
+        sonos_res.on ("data", function (chunk) {
+            console.log("BODY: " + chunk);
+        });
+        res.send({
+            status: 1,
+            statusMessage: "Successfully played " + req.params.mp3 + "."
+        });
+    })
+    .on ("error", function (e) {
+        console.log (e);
+        res.send({
+            status: 0,
+            statusMessage: e.toString ()
+        });
+    });
+
+});
+
+// set web endpoints
 app.get ("*", function (req, res) {
     page.startTimer ();
 
