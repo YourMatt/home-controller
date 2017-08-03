@@ -1,11 +1,11 @@
 {
-  "name": "node-express-skeleton",
+  "name": "home-controller",
   "version": "0.0.0",
-  "description": "Node Express Skeleton",
+  "description": "API for managing actions and notifications within my home network.",
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YourMatt/node-express-skeleton.git"
+    "url": "https://github.com/YourMatt/home-controller.git"
   },
   "author": "Matt Sadowski",
   "dependencies": {
@@ -13,6 +13,9 @@
     "ejs": "~2.5.5",
     "mysql": "~2.12.0",
     "dotenv": "~4.0.0",
-    "sendgrid": "~4.7.1"
+    "sendgrid": "~4.7.1",
+    "util": "~0.10.3",
+    "child_process": "~1.0.2",
+    "body-parser": "~1.17.2"
   }
 }

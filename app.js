@@ -5,8 +5,10 @@ require ("dotenv").config();
 // include libraries
 var express = require ("express")
 ,   ejs = require ("ejs")
-,   http = require ("http")
+,   bodyParser = require("body-parser")
 ,   page = require ("./pagemanager.js")
+,   shell = require ("./shell.js")
+,   sonos = require ("./sonos.js")
 ,   database = require ("./databaseaccessor.js")
 ,   email = require ("./emailaccessor.js");
 
@@ -15,36 +17,64 @@ var app = express ();
 app.set ("port", process.env.RUNTIME_PORT);
 app.set ("views", __dirname + "/views/layout");
 app.engine ("ejs", ejs.renderFile);
+app.use (bodyParser.json());
 app.use (express.static (__dirname + "/public"));
 
 // set api endpoints
+app.all ("/test", function (req, res) {
+
+    shell.writeLog ("Request to " + req.url + " via " + req.method);
+    shell.writeLog ("Payload: " + JSON.stringify(req.body));
+    res.send({
+        status: 1,
+        statusMessage: "Successfully logged request."
+    });
+
+});
 app.get ("/sonos/play/clip/:mp3/:volume?", function (req, res) {
 
-    var sonosApiPath = "/" + process.env.SONOS_PLAYER_NAME + "/clip/" + req.params.mp3;
-    if (req.params.volume) sonosApiPath += "/" + req.params.volume;
-
-    http.get ({
-        host: process.env.SONOS_URI,
-        port: 80,
-        path: sonosApiPath
-    },
-    function (sonos_res) {
-        //console.log (sonos_res);
-        sonos_res.on ("data", function (chunk) {
-            console.log("BODY: " + chunk);
-        });
+    sonos.playClip (req.params.mp3, req.params.volume, function (status, message) {
         res.send({
-            status: 1,
-            statusMessage: "Successfully played " + req.params.mp3 + "."
-        });
-    })
-    .on ("error", function (e) {
-        console.log (e);
-        res.send({
-            status: 0,
-            statusMessage: e.toString ()
+            status: status,
+            statusMessage: message
         });
     });
+
+});
+
+// set api endpoints for specific ifttt webhooks
+app.post ("/ifttt/cubsfinalscore", function (req, res) {
+
+    // temporarily disable functionality
+    return res.send ({
+        status: 1,
+        statusMessage: "Temporarily disabled until can see example payload."
+    });
+
+    var scoreInfo = req.body;
+
+    /* Sample formats: winner is listed first after "Final:"
+     Final: Diamondbacks 3 Cubs 0. WP: ARI Z Godley (5-4) LP: CHC J Arrieta (10-8) SV: ARI F Rodney (23) (ESPN)
+     Final: Cubs 16 Diamondbacks 4. WP: CHC H Rondon (3-1) LP: ARI P Corbin (8-10) (ESPN)
+     */
+
+    var scoreInfoWords = (scoreInfo) ? scoreInfo.split(" ") : [];
+    var cubsWon = (scoreInfoWords.length >= 5 && scoreInfoWords[1] === "Cubs");
+
+    if (cubsWon) {
+        sonos.playClip (process.env.CUBS_WIN_CLIP, process.env.CUBS_WIN_VOLUME, function (status, message) {
+            res.send ({
+                status: status,
+                statusMessage: message
+            });
+        });
+    }
+    else {
+        res.send ({
+            status: 1,
+            statusMessage: "No action performed."
+        });
+    }
 
 });
 
