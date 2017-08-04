@@ -6,12 +6,12 @@ require ("dotenv").config();
 var express = require ("express")
 ,   ejs = require ("ejs")
 ,   bodyParser = require("body-parser")
+,   api = require ("./apimanager.js")
 ,   page = require ("./pagemanager.js")
 ,   shell = require ("./shell.js")
 ,   sonos = require ("./sonos.js")
 ,   database = require ("./databaseaccessor.js")
-,   email = require ("./emailaccessor.js")
-,   sprintf = require ("util").format;
+,   email = require ("./emailaccessor.js");
 
 // initialize express
 var app = express ();
@@ -22,69 +22,9 @@ app.use (bodyParser.json());
 app.use (express.static (__dirname + "/public"));
 
 // set api endpoints
-app.all ("/test", function (req, res) {
-
-    shell.writeLog ("Request to " + req.url + " via " + req.method);
-    shell.writeLog ("Payload: " + JSON.stringify(req.body));
-    res.send({
-        status: 1,
-        statusMessage: "Successfully logged request."
-    });
-
-});
-app.get ("/sonos/play/clip/:mp3/:volume?", function (req, res) {
-
-    sonos.playClip (req.params.mp3, req.params.volume, function (status, message) {
-        res.send({
-            status: status,
-            statusMessage: message
-        });
-    });
-
-});
-
-// set api endpoints for specific ifttt webhooks
-app.post ("/ifttt/cubsfinalscore", function (req, res) {
-
-    var scoreInfo = req.body.scoreInfo;
-    /* Sample formats: winner is listed first after "Final:"
-     Final: Diamondbacks 3 Cubs 0. WP: ARI Z Godley (5-4) LP: CHC J Arrieta (10-8) SV: ARI F Rodney (23) (ESPN)
-     Final: Cubs 16 Diamondbacks 4. WP: CHC H Rondon (3-1) LP: ARI P Corbin (8-10) (ESPN)
-     */
-
-    // determine the game winner
-    var scoreInfoWords = (scoreInfo) ? scoreInfo.split(" ") : [];
-    var cubsWon = (scoreInfoWords.length >= 5 && scoreInfoWords[1] === "Cubs");
-
-    // perform actions for winning game
-    if (cubsWon) {
-        shell.writeLog (sprintf ("Request to %s resulted in game win action.", req.url));
-        shell.writeLog (sprintf ("Payload: %s", JSON.stringify(req.body)));
-
-        // play the clip and respond without waiting for Sonos response since doesn't return until after clip has finished playing
-        sonos.playClip (process.env.CUBS_WIN_CLIP, process.env.CUBS_WIN_VOLUME, function (status, message) {
-            shell.writeLog (sprintf ("Sonos clip play response: %s", message))
-        });
-        res.send ({
-            status: 1,
-            statusMessage: "Performed action for winning game."
-        });
-
-    }
-
-    // perform actions for losing game
-    else {
-        shell.writeLog (sprintf ("Request to %s resulted in no action.", req.url));
-        shell.writeLog (sprintf ("Payload: %s", JSON.stringify(req.body)));
-
-        res.send ({
-            status: 1,
-            statusMessage: "No action performed."
-        });
-
-    }
-
-});
+app.all ("/test", api.test);
+app.get ("/sonos/play/clip/:mp3/:volume?", api.sonos.play.clip);
+app.post ("/ifttt/cubsfinalscore", api.ifttt.cubsFinalScore);
 
 // set web endpoints
 app.get ("*", function (req, res) {
