@@ -11,9 +11,9 @@ exports.playClip = function (clipFileName, volume, callback) {
         path: sonosApiPath
     },
     function (sonos_res) {
-        /*console.log (sonos_res);
+        /*
          sonos_res.on ("data", function (chunk) {
-         console.log("BODY: " + chunk);
+         console.log(chunk);
          });*/
         callback (1, "Successfully played " + clipFileName + ".");
     })
