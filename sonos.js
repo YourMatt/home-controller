@@ -1,24 +1,64 @@
 var http = require ("http")
+,   sprintf = require ("util").format;
 
-exports.playClip = function (clipFileName, volume, callback) {
-
-    var sonosApiPath = "/" + process.env.SONOS_PLAYER_NAME + "/clip/" + clipFileName;
-    if (volume) sonosApiPath += "/" + volume;
+function sendSonosRequest (apiPath, successMessage, callback) {
 
     http.get ({
         host: process.env.SONOS_URI,
         port: 80,
-        path: sonosApiPath
+        path: apiPath
     },
     function (sonos_res) {
-        /*
-         sonos_res.on ("data", function (chunk) {
-         console.log(chunk);
-         });*/
-        callback (1, "Successfully played " + clipFileName + ".");
+        callback (1, successMessage);
     })
     .on ("error", function (e) {
         callback (0, e.toString ());
     });
+
+}
+
+exports.play = function (callback) {
+
+    sendSonosRequest (
+        sprintf ("/%s/play", process.env.SONOS_PLAYER_NAME),
+        "Successfully updated to playing status.",
+        callback
+    );
+
+};
+exports.pause = function (callback) {
+
+    sendSonosRequest (
+        sprintf ("/%s/pause", process.env.SONOS_PLAYER_NAME),
+        "Successfully updated to paused status.",
+        callback
+    );
+
+};
+
+exports.setSourceToLineIn = function (callback) {
+
+    sendSonosRequest (
+        sprintf ("/%s/linein", process.env.SONOS_PLAYER_NAME),
+        "Successfully switched to line in.",
+        callback
+    );
+
+};
+
+exports.playClip = function (clipFileName, volume, callback) {
+
+    var sonosApiPath = sprintf ("/%s/clip/%s", process.env.SONOS_PLAYER_NAME, clipFileName);
+    if (volume) sonosApiPath += sprintf ("/%s", volume);
+
+    sendSonosRequest (
+        sonosApiPath,
+        sprintf ("Successfully played %s.", clipFileName),
+        callback
+    );
+
+};
+
+exports.playTextToSpeech = function (text, volume, callback) {
 
 };

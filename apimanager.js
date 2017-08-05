@@ -33,8 +33,50 @@ exports.test = function (req, res) {
 // handles sonos actions
 exports.sonos = {
 
+    // any general playback controls
+    general: {
+
+        play: function (req, res) {
+            if (! authenticateToken (req.headers.authtoken, res)) return;
+
+            sonos.play (function (status, message) {
+                res.send({
+                    status: status,
+                    statusMessage: message
+                });
+            });
+
+        },
+
+        pause: function (req, res) {
+            if (! authenticateToken (req.headers.authtoken, res)) return;
+
+            sonos.pause (function (status, message) {
+                res.send({
+                    status: status,
+                    statusMessage: message
+                });
+            });
+
+        }
+
+    },
+
     // any action that requires playback
     play: {
+
+        // play line in as source
+        linein: function (req, res) {
+            if (! authenticateToken (req.headers.authtoken, res)) return;
+
+            sonos.setSourceToLineIn (function (status, message) {
+                res.send({
+                    status: status,
+                    statusMessage: message
+                });
+            });
+
+        },
 
         // play an MP3 file from the controller static/clips directory
         clip: function (req, res) {

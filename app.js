@@ -23,6 +23,9 @@ app.use (express.static (__dirname + "/public"));
 
 // set api endpoints
 app.all ("/test", api.test);
+app.get ("/sonos/play", api.sonos.general.play);
+app.get ("/sonos/pause", api.sonos.general.pause);
+app.get ("/sonos/play/linein", api.sonos.play.linein);
 app.get ("/sonos/play/clip/:mp3/:volume?", api.sonos.play.clip);
 app.post ("/ifttt/cubsfinalscore", api.ifttt.cubsFinalScore);
 
