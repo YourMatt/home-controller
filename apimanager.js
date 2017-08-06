@@ -58,6 +58,22 @@ exports.sonos = {
                 });
             });
 
+        },
+
+        setVolume: function (req, res) {
+            if (! authenticateToken (req.headers.authtoken, res)) return;
+
+            sonos.setVolume (
+                (req.params.direction && req.params.direction === "down") ? (0 - req.params.percent) : req.params.percent,
+                (req.params.direction && (req.params.direction === "up" || req.params.direction === "down")),
+                function (status, message) {
+                    res.send({
+                        status: status,
+                        statusMessage: message
+                    });
+                }
+            );
+
         }
 
     },

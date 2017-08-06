@@ -26,11 +26,26 @@ exports.play = function (callback) {
     );
 
 };
+
 exports.pause = function (callback) {
 
     sendSonosRequest (
         sprintf ("/%s/pause", process.env.SONOS_PLAYER_NAME),
         "Successfully updated to paused status.",
+        callback
+    );
+
+};
+
+exports.setVolume = function (percent, isDelta, callback) {
+
+    var sonosApiPath = sprintf ("/%s/volume/", process.env.SONOS_PLAYER_NAME);
+    if (isDelta && percent > 0) sonosApiPath += sprintf ("+%s", percent);
+    else sonosApiPath += percent.toString ();
+
+    sendSonosRequest (
+        sonosApiPath,
+        "Successfully changed volume.",
         callback
     );
 
